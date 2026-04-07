@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Hook: The Greenhouse Effect</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+        canvas {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+let photons = [];
+let carbon, oxygenL, oxygenR;
+let frequency = 0.5; 
+let vibrationEnergy = 0;
+let radFreq;
+
+function setup() {
+  let canvas = createCanvas(800, 500);
+  
+  // UI Radio Buttons - Styled for a "PhET" feel
+  let uiContainer = createDiv('');
+  uiContainer.position(20, 20);
+  
+  let label = createSpan('<b>LIGHT SOURCE SELECTION:</b><br>');
+  label.parent(uiContainer);
+  
+  radFreq = createRadio();
+  radFreq.option('0.2', 'Visible (Sunlight) ');
+  radFreq.option('0.8', 'Infrared (Earth Heat) ');
+  radFreq.selected('0.2');
+  radFreq.parent(uiContainer);
+  
+  // Styling the UI via JS
+  uiContainer.style('background', 'rgba(255, 255, 255, 0.9)');
+  uiContainer.style('padding', '15px');
+  uiContainer.style('border-radius', '8px');
+  uiContainer.style('box-shadow', '0 2px 5px rgba(0,0,0,0.1)');
+  uiContainer.style('border', '1px solid #ccc');
+
+  // Initialize molecule positions
+  carbon = createVector(width/2, height/2 + 50);
+  oxygenL = createVector(width/2 - 90, height/2 + 50);
+  oxygenR = createVector(width/2 + 90, height/2 + 50);
+}
+
+function draw() {
+  background(255);
+  
+  // 1. Draw Environmental Zones
+  noStroke();
+  fill(135, 206, 235, 40); rect(0, 0, width, 120); // Upper Atmosphere
+  fill(100, 200, 100, 30); rect(0, height-60, width, 60); // Earth Surface
+  
+  fill(80); textSize(14); textStyle(BOLD);
+  text("OUTER SPACE", 20, 105);
+  text("EARTH SURFACE", 20, height-70);
+
+  // 2. Photon Generation
+  if (frameCount % 15 == 0) {
+    photons.push(new Photon(random(width), height-65, radFreq.value()));
+  }
+
+  // 3. Quantum Molecule Physics
+  let resonantFreq = 0.8;
+  vibrationEnergy *= 0.97; // Natural damping
+  
+  let vib = sin(frameCount * 0.4) * vibrationEnergy * 25;
+  
+  // Draw Chemical Bonds (Springs)
+  stroke(180); strokeWeight(6);
+  line(carbon.x, carbon.y, oxygenL.x - vib, oxygenL.y + vib);
+  line(carbon.x, carbon.y, oxygenR.x + vib, oxygenR.y + vib);
+
+  // Draw Atoms
+  stroke(0); strokeWeight(1.5);
+  fill(40); ellipse(carbon.x, carbon.y, 60, 60); // Carbon
+  fill(255, 60, 60); 
+  ellipse(oxygenL.x - vib, oxygenL.y + vib, 45, 45); // Oxygen L
+  ellipse(oxygenR.x + vib, oxygenR.y + vib, 45, 45); // Oxygen R
+  
+  fill(255); textAlign(CENTER); textSize(18);
+  text("C", carbon.x, carbon.y+7);
+  text("O", oxygenL.x - vib, oxygenL.y+7);
+  text("O", oxygenR.x + vib, oxygenR.y+7);
+
+  // 4. Interaction Loop
+  for (let i = photons.length - 1; i >= 0; i--) {
+    photons[i].update();
+    photons[i].display();
+
+    let d = dist(photons[i].pos.x, photons[i].pos.y, carbon.x, carbon.y);
+    if (d < 45) {
+      // The Quantum "Check": Does the photon energy match the vibration mode?
+      if (abs(photons[i].freq - resonantFreq) < 0.1) {
+        vibrationEnergy = 1.2; // Absorption
+        photons.splice(i, 1);
+      }
+    } else if (photons[i].pos.y < -50) {
+      photons.splice(i, 1);
+    }
+  }
+
+  // 5. Warming Meter
+  drawWarmingMeter(width - 180, 150, vibrationEnergy);
+}
+
+function drawWarmingMeter(x, y, energy) {
+  push();
+  translate(x, y);
+  fill(0); textAlign(LEFT); textSize(14);
+  text("HEAT RETENTION", 0, -15);
+  fill(230); rect(0, 0, 150, 25, 5);
+  fill(255, 100, 0); 
+  rect(0, 0, map(energy, 0, 1.2, 0, 150), 25, 5);
+  pop();
+}
+
+class Photon {
+  constructor(x, y, f) {
+    this.pos = createVector(x, y);
+    this.freq = parseFloat(f);
+    this.vel = createVector(0, -4);
+  }
+
+  update() {
+    this.pos.add(this.vel);
+  }
+
+  display() {
+    // IR is Purple/Red, Visible is Yellow
+    stroke(this.freq > 0.5 ? '#C2185B' : '#FBC02D');
+    strokeWeight(3); noFill();
+    beginShape();
+    for (let i = 0; i < 25; i++) {
+      let xOff = sin(i * 0.4 + frameCount * 0.6) * 6;
+      vertex(this.pos.x + xOff, this.pos.y + i);
+    }
+    endShape();
+  }
+}
+</script>
+
+</body>
+</html>
