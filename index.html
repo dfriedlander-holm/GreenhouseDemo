@@ -102,10 +102,17 @@ function draw() {
   
   let vib = sin(frameCount * 0.4) * vibrationEnergy * 25;
   
-  // Draw Chemical Bonds (Springs)
-  stroke(180); strokeWeight(6);
-  line(carbon.x, carbon.y, oxygenL.x - vib, oxygenL.y + vib);
-  line(carbon.x, carbon.y, oxygenR.x + vib, oxygenR.y + vib);
+  // --- DRAWING DOUBLE BONDS ---
+  stroke(180); 
+  strokeWeight(4); // Thinner than single bond to accommodate two lines
+  
+  // Left Double Bond (C=O)
+  line(carbon.x, carbon.y - 8, oxygenL.x - vib, oxygenL.y + vib - 8);
+  line(carbon.x, carbon.y + 8, oxygenL.x - vib, oxygenL.y + vib + 8);
+  
+  // Right Double Bond (C=O)
+  line(carbon.x, carbon.y - 8, oxygenR.x + vib, oxygenR.y + vib - 8);
+  line(carbon.x, carbon.y + 8, oxygenR.x + vib, oxygenR.y + vib + 8);
 
   // Draw Atoms
   stroke(0); strokeWeight(1.5);
@@ -126,13 +133,11 @@ function draw() {
 
     let d = dist(photons[i].pos.x, photons[i].pos.y, carbon.x, carbon.y);
     if (d < 45) {
-      // Check resonance
       if (abs(photons[i].freq - resonantFreq) < 0.1) {
         vibrationEnergy = 1.2; 
         photons.splice(i, 1);
       }
     } else if (photons[i].pos.y < -100 || photons[i].pos.y > height + 100) {
-      // Remove photons that leave the simulation area
       photons.splice(i, 1);
     }
   }
@@ -149,39 +154,3 @@ function drawWarmingMeter(x, y, energy) {
   fill(230); rect(0, 0, 160, 30, 5);
   fill(255, 69, 0); 
   rect(0, 0, map(energy, 0, 1.2, 0, 160), 30, 5);
-  pop();
-}
-
-class Photon {
-  constructor(x, y, f) {
-    this.pos = createVector(x, y);
-    this.freq = f;
-    // Set direction based on frequency
-    if (this.freq < 0.5) {
-      this.vel = createVector(0, 4.5); // Sunlight moves DOWN
-    } else {
-      this.vel = createVector(0, -4.5); // Earth Heat moves UP
-    }
-  }
-
-  update() {
-    this.pos.add(this.vel);
-  }
-
-  display() {
-    stroke(this.freq > 0.5 ? '#E91E63' : '#FFD600');
-    strokeWeight(3); noFill();
-    beginShape();
-    // Reversing the drawing direction of the squiggle so it points the right way
-    let dir = this.vel.y > 0 ? -1 : 1;
-    for (let i = 0; i < 25; i++) {
-      let xOff = sin(i * 0.4 + frameCount * 0.7) * 7;
-      vertex(this.pos.x + xOff, this.pos.y + (i * dir));
-    }
-    endShape();
-  }
-}
-</script>
-
-</body>
-</html>
