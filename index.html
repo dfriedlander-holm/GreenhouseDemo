@@ -14,15 +14,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #f8f9fa;
+            background-color: #f0f0f0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
             height: 100vh;
         }
         canvas {
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             border-radius: 12px;
-            border: 1px solid #ddd;
         }
     </style>
 </head>
@@ -31,16 +30,15 @@
 <script>
 let photons = [];
 let carbon, oxygenL, oxygenR;
-let frequency = 0.5; 
 let vibrationEnergy = 0;
 let radFreq;
 
 function setup() {
-  let canvas = createCanvas(800, 500);
+  createCanvas(800, 550);
   
-  // UI Radio Buttons - Styled for a "PhET" feel
+  // UI Container
   let uiContainer = createDiv('');
-  uiContainer.position(20, 20);
+  uiContainer.position(30, 30);
   
   let label = createSpan('<b>LIGHT SOURCE SELECTION:</b><br>');
   label.parent(uiContainer);
@@ -51,17 +49,17 @@ function setup() {
   radFreq.selected('0.2');
   radFreq.parent(uiContainer);
   
-  // Styling the UI via JS
-  uiContainer.style('background', 'rgba(255, 255, 255, 0.9)');
+  // UI Styling
+  uiContainer.style('background', 'rgba(255, 255, 255, 0.95)');
   uiContainer.style('padding', '15px');
   uiContainer.style('border-radius', '8px');
-  uiContainer.style('box-shadow', '0 2px 5px rgba(0,0,0,0.1)');
-  uiContainer.style('border', '1px solid #ccc');
+  uiContainer.style('border', '2px solid #333');
+  uiContainer.style('z-index', '100');
 
-  // Initialize molecule positions
-  carbon = createVector(width/2, height/2 + 50);
-  oxygenL = createVector(width/2 - 90, height/2 + 50);
-  oxygenR = createVector(width/2 + 90, height/2 + 50);
+  // Initialize molecule positions - Centered
+  carbon = createVector(width/2, height/2 + 40);
+  oxygenL = createVector(width/2 - 90, height/2 + 40);
+  oxygenR = createVector(width/2 + 90, height/2 + 40);
 }
 
 function draw() {
@@ -69,21 +67,33 @@ function draw() {
   
   // 1. Draw Environmental Zones
   noStroke();
-  fill(135, 206, 235, 40); rect(0, 0, width, 120); // Upper Atmosphere
-  fill(100, 200, 100, 30); rect(0, height-60, width, 60); // Earth Surface
+  // OUTER SPACE: Dark Grey
+  fill(40, 40, 45); 
+  rect(0, 0, width, 140); 
   
-  fill(80); textSize(14); textStyle(BOLD);
-  text("OUTER SPACE", 20, 105);
-  text("EARTH SURFACE", 20, height-70);
+  // EARTH SURFACE: Ground Green/Brown
+  fill(120, 100, 80, 50); 
+  rect(0, height-80, width, 80); 
 
-  // 2. Photon Generation
+  // 2. Updated Labels (Safe Positions)
+  textAlign(LEFT);
+  textSize(16); 
+  textStyle(BOLD);
+  
+  fill(255); // White text for dark space
+  text("OUTER SPACE (VACUUM)", 30, 130);
+  
+  fill(60); // Dark text for Earth
+  text("EARTH'S SURFACE", 30, height-95);
+
+  // 3. Photon Generation
   if (frameCount % 15 == 0) {
-    photons.push(new Photon(random(width), height-65, radFreq.value()));
+    photons.push(new Photon(random(width), height-85, radFreq.value()));
   }
 
-  // 3. Quantum Molecule Physics
+  // 4. Quantum Molecule Physics
   let resonantFreq = 0.8;
-  vibrationEnergy *= 0.97; // Natural damping
+  vibrationEnergy *= 0.97; // Decay
   
   let vib = sin(frameCount * 0.4) * vibrationEnergy * 25;
   
@@ -94,26 +104,25 @@ function draw() {
 
   // Draw Atoms
   stroke(0); strokeWeight(1.5);
-  fill(40); ellipse(carbon.x, carbon.y, 60, 60); // Carbon
+  fill(40); ellipse(carbon.x, carbon.y, 65, 65); // Carbon
   fill(255, 60, 60); 
-  ellipse(oxygenL.x - vib, oxygenL.y + vib, 45, 45); // Oxygen L
-  ellipse(oxygenR.x + vib, oxygenR.y + vib, 45, 45); // Oxygen R
+  ellipse(oxygenL.x - vib, oxygenL.y + vib, 50, 50); // Oxygen L
+  ellipse(oxygenR.x + vib, oxygenR.y + vib, 50, 50); // Oxygen R
   
-  fill(255); textAlign(CENTER); textSize(18);
+  fill(255); textAlign(CENTER); textSize(20);
   text("C", carbon.x, carbon.y+7);
   text("O", oxygenL.x - vib, oxygenL.y+7);
   text("O", oxygenR.x + vib, oxygenR.y+7);
 
-  // 4. Interaction Loop
+  // 5. Interaction Loop
   for (let i = photons.length - 1; i >= 0; i--) {
     photons[i].update();
     photons[i].display();
 
     let d = dist(photons[i].pos.x, photons[i].pos.y, carbon.x, carbon.y);
     if (d < 45) {
-      // The Quantum "Check": Does the photon energy match the vibration mode?
       if (abs(photons[i].freq - resonantFreq) < 0.1) {
-        vibrationEnergy = 1.2; // Absorption
+        vibrationEnergy = 1.2; 
         photons.splice(i, 1);
       }
     } else if (photons[i].pos.y < -50) {
@@ -121,18 +130,18 @@ function draw() {
     }
   }
 
-  // 5. Warming Meter
-  drawWarmingMeter(width - 180, 150, vibrationEnergy);
+  // 6. Data Readout (Warming Meter)
+  drawWarmingMeter(width - 200, height - 150, vibrationEnergy);
 }
 
 function drawWarmingMeter(x, y, energy) {
   push();
   translate(x, y);
   fill(0); textAlign(LEFT); textSize(14);
-  text("HEAT RETENTION", 0, -15);
-  fill(230); rect(0, 0, 150, 25, 5);
-  fill(255, 100, 0); 
-  rect(0, 0, map(energy, 0, 1.2, 0, 150), 25, 5);
+  text("ATMOSPHERIC WARMING", 0, -15);
+  fill(230); rect(0, 0, 160, 30, 5);
+  fill(255, 69, 0); 
+  rect(0, 0, map(energy, 0, 1.2, 0, 160), 30, 5);
   pop();
 }
 
@@ -140,7 +149,7 @@ class Photon {
   constructor(x, y, f) {
     this.pos = createVector(x, y);
     this.freq = parseFloat(f);
-    this.vel = createVector(0, -4);
+    this.vel = createVector(0, -4.5);
   }
 
   update() {
@@ -148,12 +157,12 @@ class Photon {
   }
 
   display() {
-    // IR is Purple/Red, Visible is Yellow
-    stroke(this.freq > 0.5 ? '#C2185B' : '#FBC02D');
+    // IR = Deep Pink, Visible = Bright Yellow
+    stroke(this.freq > 0.5 ? '#E91E63' : '#FFD600');
     strokeWeight(3); noFill();
     beginShape();
     for (let i = 0; i < 25; i++) {
-      let xOff = sin(i * 0.4 + frameCount * 0.6) * 6;
+      let xOff = sin(i * 0.4 + frameCount * 0.7) * 7;
       vertex(this.pos.x + xOff, this.pos.y + i);
     }
     endShape();
